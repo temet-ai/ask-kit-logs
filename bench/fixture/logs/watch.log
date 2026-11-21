@@ -1,0 +1,19 @@
+2026-11-10 13:58:02,114 INFO watch.patrol: patrol 41 started from Pseudopolis Yard
+2026-11-10 13:58:40,005 INFO watch.patrol: patrol 41 reached Treacle Mine Road
+2026-11-10 14:03:05,412 ERROR watch.relay: could not relay report 8812 to the Yard
+Traceback (most recent call last):
+  File "/srv/watch/relay.py", line 88, in send
+    tower.wait(30)
+  File "/srv/watch/tower.py", line 17, in wait
+    raise TowerError(self.number)
+watch.tower.TowerError: tower 6 did not answer
+2026-11-10 14:03:06,020 WARNING watch.relay: falling back to the courier for report 8812
+2026-11-10 14:09:31,777 ERROR watch.relay: could not relay report 8830 to the Yard
+Traceback (most recent call last):
+  File "/srv/watch/relay.py", line 88, in send
+    tower.wait(30)
+  File "/srv/watch/tower.py", line 17, in wait
+    raise TowerError(self.number)
+watch.tower.TowerError: tower 6 did not answer
+2026-11-10 14:12:00,001 INFO watch.auth: login by vimes@watch.ankh-morpork.example with token=tk_live_9f8e7d6c5b4a39281706 from 10.0.1.17
+2026-11-10 14:12:44,300 INFO watch.patrol: patrol 42 started from Pseudopolis Yard
