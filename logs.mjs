@@ -1237,9 +1237,9 @@ export function make({ settings = {}, push = () => {} } = {}) {
         }, ctl);
         return { r, w, counts, examples, n, stats };
       };
-      const ra = await read(A);
+      // The two sides do not depend on each other: read them at the same time.
+      const [ra, rb] = await Promise.all([read(A), read(B)]);
       if (ra.error) return { error: `a: ${ra.error}` };
-      const rb = await read(B);
       if (rb.error) return { error: `b: ${rb.error}` };
       const top = Math.max(1, Math.min(+(o.top ?? 8) || 8, 40));
       const onlyA = [];
@@ -1292,14 +1292,13 @@ export function make({ settings = {}, push = () => {} } = {}) {
       logs.sort((a, b) => (b.parts.at(-1).mtime ?? 0) - (a.parts.at(-1).mtime ?? 0));
       const max = Math.min(+(o.max ?? 40) || 40, 100);
       let budget = (+(o.budgetMB ?? 512) || 512) << 20;
-      const out = [];
-      for (const l of logs.slice(0, max)) {
+      // Each log is read on its own: start them all, and keep the rows in order.
+      const out = await Promise.all(logs.slice(0, max).map(async (l) => {
         const size = l.parts.reduce((x, p) => x + (p.size ?? 0), 0);
         const row = { log: l.name, ...(l.parts.length > 1 ? { parts: l.parts.length } : {}), size: human(size), format: l.parts.at(-1).det.label };
         if (l.parts[0].error) {
           row.error = l.parts[0].error;
-          out.push(row);
-          continue;
+          return row;
         }
         const cost = l.parts.reduce((x, p) => x + (p.gz ? p.size * 8 : p.size), 0);
         if (cost <= budget && !ctl.stopped) {
@@ -1322,8 +1321,8 @@ export function make({ settings = {}, push = () => {} } = {}) {
           const b = await bounds([l], ctl);
           Object.assign(row, { first: iso(b.first), last: iso(b.last), lines: null, counted: false });
         }
-        out.push(row);
-      }
+        return row;
+      }));
       if (out.some((x) => x.counted === false)) notes.push("lines and errors were not counted for the logs marked counted: false (the reading budget ran out); run errors on one of them");
       return { ...(dir ? {} : { dirs: defaultDirs.map(show) }), count: logs.length, logs: out, ...(logs.length > max ? { leftOut: logs.length - max } : {}), ...(notes.length ? { notes } : {}) };
     },
